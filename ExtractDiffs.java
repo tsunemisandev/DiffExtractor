@@ -46,19 +46,15 @@ public class ExtractDiffs {
         Path   repoDir   = Path.of(args.length == 3 ? args[2] : ".").toAbsolutePath().normalize();
 
         // diff テキスト読み込み
-        // UTF-8 で読み込み、不正バイト列は置換文字 (U+FFFD) に置き換える
-        // → Shift-JIS / Latin-1 等で保存されたパッチファイルでも例外にならない
-        CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
-                .onMalformedInput(CodingErrorAction.REPLACE)
-                .onUnmappableCharacter(CodingErrorAction.REPLACE);
+        // BOM を検出して UTF-16 LE/BE / UTF-8 を自動判別する
+        // PowerShell の > リダイレクトは UTF-16 LE で出力するため対応が必要
         List<String> lines;
         if ("-".equals(patchArg)) {
-            lines = new BufferedReader(new InputStreamReader(System.in, decoder))
-                    .lines().toList();
+            byte[] raw = System.in.readAllBytes();
+            lines = Arrays.asList(decodeWithBOM(raw).split("\r?\n", -1));
         } else {
             byte[] raw = Files.readAllBytes(Path.of(patchArg));
-            String content = decoder.decode(java.nio.ByteBuffer.wrap(raw)).toString();
-            lines = Arrays.asList(content.split("\r?\n", -1));
+            lines = Arrays.asList(decodeWithBOM(raw).split("\r?\n", -1));
         }
 
         List<FileInfo> files = parseDiff(lines);
@@ -93,6 +89,30 @@ public class ExtractDiffs {
         System.out.println("\n完了: " + outputDir);
         System.out.println("  修正前 -> " + beforeRoot);
         System.out.println("  修正後 -> " + afterRoot);
+    }
+
+    // ----------------------------------------------------------------
+    // BOM 検出 + デコード
+    // ----------------------------------------------------------------
+    static String decodeWithBOM(byte[] raw) throws IOException {
+        // UTF-16 LE (BOM: FF FE)
+        if (raw.length >= 2 && (raw[0] & 0xFF) == 0xFF && (raw[1] & 0xFF) == 0xFE) {
+            String s = new String(raw, 2, raw.length - 2, StandardCharsets.UTF_16LE);
+            return s.startsWith("\uFEFF") ? s.substring(1) : s;
+        }
+        // UTF-16 BE (BOM: FE FF)
+        if (raw.length >= 2 && (raw[0] & 0xFF) == 0xFE && (raw[1] & 0xFF) == 0xFF) {
+            return new String(raw, 2, raw.length - 2, StandardCharsets.UTF_16BE);
+        }
+        // UTF-8 BOM (EF BB BF) またはそのまま UTF-8
+        int offset = (raw.length >= 3
+                && (raw[0] & 0xFF) == 0xEF
+                && (raw[1] & 0xFF) == 0xBB
+                && (raw[2] & 0xFF) == 0xBF) ? 3 : 0;
+        CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPLACE)
+                .onUnmappableCharacter(CodingErrorAction.REPLACE);
+        return decoder.decode(java.nio.ByteBuffer.wrap(raw, offset, raw.length - offset)).toString();
     }
 
     // ----------------------------------------------------------------

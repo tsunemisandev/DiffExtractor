@@ -1,0 +1,11 @@
+diff --git a/src/OldClass.java b/src/OldClass.java
+deleted file mode 100644
+index bbbbbbb..0000000
+--- a/src/OldClass.java
++++ /dev/null
+@@ -1,5 +0,0 @@
+-public class OldClass {
+-    public void doSomething() {
+-        System.out.println("I am old");
+-    }
+-}

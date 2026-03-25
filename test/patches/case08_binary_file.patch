@@ -1,0 +1,15 @@
+diff --git a/images/logo.png b/images/logo.png
+index abc1234..def5678 100644
+Binary files a/images/logo.png and b/images/logo.png differ
+diff --git a/src/Main.java b/src/Main.java
+index 1111111..2222222 100644
+--- a/src/Main.java
++++ b/src/Main.java
+@@ -1,4 +1,4 @@
+ public class Main {
+-    static final String VERSION = "1.0";
++    static final String VERSION = "2.0";
+ }
+diff --git a/assets/background.jpg b/assets/background.jpg
+index aaaaaaa..bbbbbbb 100644
+Binary files a/assets/background.jpg and b/assets/background.jpg differ

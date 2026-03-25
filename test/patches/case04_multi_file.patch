@@ -1,0 +1,35 @@
+diff --git a/src/main/App.java b/src/main/App.java
+index 1234567..abcdefg 100644
+--- a/src/main/App.java
++++ b/src/main/App.java
+@@ -1,8 +1,8 @@
+ public class App {
+-    private String version = "1.0.0";
++    private String version = "2.0.0";
+
+     public void run() {
+-        System.out.println("App v" + version);
++        System.out.println("Running App v" + version);
+     }
+ }
+diff --git a/config/app.properties b/config/app.properties
+index aaaaaaa..bbbbbbb 100644
+--- a/config/app.properties
++++ b/config/app.properties
+@@ -1,4 +1,4 @@
+-app.version=1.0.0
++app.version=2.0.0
+ app.name=MyApp
+-app.debug=true
++app.debug=false
+diff --git a/README.md b/README.md
+index ccccccc..ddddddd 100644
+--- a/README.md
++++ b/README.md
+@@ -1,5 +1,5 @@
+ # MyApp
+-Version 1.0.0
++Version 2.0.0
+
+-Old description here.
++Updated description for v2.

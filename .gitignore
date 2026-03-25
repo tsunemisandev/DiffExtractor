@@ -1,0 +1,15 @@
+# Java コンパイル成果物
+*.class
+
+# テスト実行時の出力 (RunTests が自動生成)
+test/output/
+
+# case09 が動的に生成するパッチ (テスト実行ごとに再生成)
+test/patches/case09_binary_blob.patch
+
+# ツール実行時に生成されるパッチ・出力ファイル
+*.patch
+!test/patches/case0[1-8]*.patch
+
+# Claude Code 設定 (個人環境)
+.claude/

@@ -1,0 +1,27 @@
+diff --git a/src/Calculator.java b/src/Calculator.java
+index 1111111..9999999 100644
+--- a/src/Calculator.java
++++ b/src/Calculator.java
+@@ -1,10 +1,10 @@
+ public class Calculator {
+-    // Addition
++    // 足し算
+     public int add(int a, int b) {
+-        return a + b;
++        return a + b; // fixed
+     }
+
+     public int subtract(int a, int b) {
+         return a - b;
+     }
+@@ -15,9 +15,9 @@
+     }
+
+-    // Old multiply
++    // 掛け算
+     public int multiply(int a, int b) {
+-        return a * b;
++        return Math.multiplyExact(a, b);
+     }
+
+     public int divide(int a, int b) {

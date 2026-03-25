@@ -1,0 +1,11 @@
+diff --git a/src/NewClass.java b/src/NewClass.java
+new file mode 100644
+index 0000000..aaaaaaa
+--- /dev/null
++++ b/src/NewClass.java
+@@ -0,0 +1,5 @@
++public class NewClass {
++    public String greet() {
++        return "Hello from NewClass";
++    }
++}

@@ -1,0 +1,20 @@
+diff --git a/config/設定ファイル.properties b/config/設定ファイル.properties
+index aaaaaaa..bbbbbbb 100644
+--- a/config/設定ファイル.properties
++++ b/config/設定ファイル.properties
+@@ -1,4 +1,4 @@
+-バージョン=1.0
++バージョン=2.0
+ 名前=テストアプリ
+-デバッグ=有効
++デバッグ=無効
+diff --git a/docs/仕様書.md b/docs/仕様書.md
+new file mode 100644
+index 0000000..ccccccc
+--- /dev/null
++++ b/docs/仕様書.md
+@@ -0,0 +1,4 @@
++# 仕様書
++
++## 概要
++このアプリはテスト用です。

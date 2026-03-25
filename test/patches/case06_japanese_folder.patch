@@ -1,0 +1,13 @@
+diff --git a/src/ソース/メイン処理/App.java b/src/ソース/メイン処理/App.java
+index 1111111..2222222 100644
+--- a/src/ソース/メイン処理/App.java
++++ b/src/ソース/メイン処理/App.java
+@@ -1,5 +1,5 @@
+ public class App {
+-    // 旧バージョン
++    // 新バージョン
+     public void run() {
+-        System.out.println("起動");
++        System.out.println("アプリ起動");
+     }
+ }

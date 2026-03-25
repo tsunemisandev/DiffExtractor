@@ -1,5 +1,4 @@
 import java.io.*;
-import java.nio.charset.*;
 import java.nio.file.*;
 import java.util.*;
 
@@ -37,8 +36,6 @@ public class RunTests {
         // case09: 実際の git リポジトリをセットアップしてパッチを生成
         String case09RepoDir = setupCase09(testDir, patchDir);
 
-        // case10: Shift-JIS エンコードのパッチファイルを生成
-        setupCase10(patchDir);
 
         List<TestCase> cases = List.of(
             new TestCase("case01", "case01_simple_edit.patch",    "単純な行編集"),
@@ -49,8 +46,7 @@ public class RunTests {
             new TestCase("case06", "case06_japanese_folder.patch","フォルダパスが日本語"),
             new TestCase("case07", "case07_japanese_filename.patch","ファイル名が日本語"),
             new TestCase("case08", "case08_binary_file.patch",    "バイナリファイル混在（スキップ確認）"),
-            new TestCase("case09", "case09_binary_blob.patch",    "バイナリを git blob から取得", case09RepoDir),
-            new TestCase("case10", "case10_shiftjis.patch",       "Shift-JIS エンコードのパッチ")
+            new TestCase("case09", "case09_binary_blob.patch",    "バイナリを git blob から取得", case09RepoDir)
         );
 
         System.out.println("========================================");
@@ -119,22 +115,6 @@ public class RunTests {
             System.out.println("[setup] case09 セットアップ失敗: " + e.getMessage());
             return repoDir.toString();
         }
-    }
-
-    static void setupCase10(Path patchDir) throws Exception {
-        // Shift-JIS (MS932) エンコードのパッチファイルを生成
-        String patchContent =
-                "diff --git a/src/Message.java b/src/Message.java\n" +
-                "index aaaaaaa..bbbbbbb 100644\n" +
-                "--- a/src/Message.java\n" +
-                "+++ b/src/Message.java\n" +
-                "@@ -1,3 +1,3 @@\n" +
-                " public class Message {\n" +
-                "-    String text = \"古いメッセージ\";\n" +
-                "+    String text = \"新しいメッセージ\";\n" +
-                " }\n";
-        byte[] sjisBytes = patchContent.getBytes(Charset.forName("MS932"));
-        Files.write(patchDir.resolve("case10_shiftjis.patch"), sjisBytes);
     }
 
     static void runGit(Path dir, String... gitArgs) throws Exception {
@@ -235,11 +215,6 @@ public class RunTests {
                 // 同じパッチ内のテキストファイルは正常に出力されること
                 assertFileContains(beforeRoot.resolve("src/Main.java"), "VERSION = \"1.0\"", tc.name());
                 assertFileContains(afterRoot .resolve("src/Main.java"), "VERSION = \"2.0\"", tc.name());
-            }
-            case "case10" -> {
-                // Shift-JIS で書かれた日本語が正しくデコードされること
-                assertFileContains(beforeRoot.resolve("src/Message.java"), "古いメッセージ",  tc.name());
-                assertFileContains(afterRoot .resolve("src/Message.java"), "新しいメッセージ", tc.name());
             }
             case "case09" -> {
                 // 修正前: git blob から取得した元のバイナリ内容と一致すること

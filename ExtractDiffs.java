@@ -104,15 +104,20 @@ public class ExtractDiffs {
         if (raw.length >= 2 && (raw[0] & 0xFF) == 0xFE && (raw[1] & 0xFF) == 0xFF) {
             return new String(raw, 2, raw.length - 2, StandardCharsets.UTF_16BE);
         }
-        // UTF-8 BOM (EF BB BF) またはそのまま UTF-8
+        // UTF-8 BOM (EF BB BF)
         int offset = (raw.length >= 3
                 && (raw[0] & 0xFF) == 0xEF
                 && (raw[1] & 0xFF) == 0xBB
                 && (raw[2] & 0xFF) == 0xBF) ? 3 : 0;
-        CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
-                .onMalformedInput(CodingErrorAction.REPLACE)
-                .onUnmappableCharacter(CodingErrorAction.REPLACE);
-        return decoder.decode(java.nio.ByteBuffer.wrap(raw, offset, raw.length - offset)).toString();
+        // まず UTF-8 (厳格) で試みる → 不正バイトがあれば MS932 (Windows Shift-JIS) で再試行
+        try {
+            CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
+                    .onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT);
+            return decoder.decode(java.nio.ByteBuffer.wrap(raw, offset, raw.length - offset)).toString();
+        } catch (CharacterCodingException e) {
+            return new String(raw, offset, raw.length - offset, Charset.forName("MS932"));
+        }
     }
 
     // ----------------------------------------------------------------

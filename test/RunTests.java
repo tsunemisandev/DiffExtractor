@@ -46,7 +46,8 @@ public class RunTests {
             new TestCase("case06", "case06_japanese_folder.patch","フォルダパスが日本語"),
             new TestCase("case07", "case07_japanese_filename.patch","ファイル名が日本語"),
             new TestCase("case08", "case08_binary_file.patch",    "バイナリファイル混在（スキップ確認）"),
-            new TestCase("case09", "case09_binary_blob.patch",    "バイナリを git blob から取得", case09RepoDir)
+            new TestCase("case09", "case09_binary_blob.patch",    "バイナリを git blob から取得", case09RepoDir),
+            new TestCase("case11", "case11_quoted_path.patch",    "日本語ファイル名のオクタルエスケープパス")
         );
 
         System.out.println("========================================");
@@ -213,6 +214,14 @@ public class RunTests {
                 assertNotExists(beforeRoot.resolve("assets/background.jpg"), tc.name());
                 assertNotExists(afterRoot .resolve("assets/background.jpg"), tc.name());
                 // 同じパッチ内のテキストファイルは正常に出力されること
+                assertFileContains(beforeRoot.resolve("src/Main.java"), "VERSION = \"1.0\"", tc.name());
+                assertFileContains(afterRoot .resolve("src/Main.java"), "VERSION = \"2.0\"", tc.name());
+            }
+            case "case11" -> {
+                // オクタルパスが正しくデコードされて日本語ファイル名になること
+                // (git cat-file は使えないのでバイナリは不在、テキストは正常に出力)
+                assertNotExists(beforeRoot.resolve("web/テスト.xlsx"), tc.name());
+                assertNotExists(afterRoot .resolve("web/テスト.xlsx"), tc.name());
                 assertFileContains(beforeRoot.resolve("src/Main.java"), "VERSION = \"1.0\"", tc.name());
                 assertFileContains(afterRoot .resolve("src/Main.java"), "VERSION = \"2.0\"", tc.name());
             }

@@ -24,9 +24,10 @@ import java.util.regex.*;
  */
 public class ExtractDiffs {
 
-    static final Pattern DIFF_GIT    = Pattern.compile("^diff --git a/(.+) b/(.+)$");
-    static final Pattern HUNK_HEADER = Pattern.compile("^@@ -(\\d+)(?:,(\\d+))? \\+(\\d+)(?:,(\\d+))? @@");
-    static final Pattern INDEX_LINE  = Pattern.compile("^index ([0-9a-f]+)\\.\\. ?([0-9a-f]+)");
+    static final Pattern DIFF_GIT        = Pattern.compile("^diff --git a/(.+) b/(.+)$");
+    static final Pattern DIFF_GIT_QUOTED = Pattern.compile("^diff --git \"a/(.+)\" \"b/(.+)\"$");
+    static final Pattern HUNK_HEADER     = Pattern.compile("^@@ -(\\d+)(?:,(\\d+))? \\+(\\d+)(?:,(\\d+))? @@");
+    static final Pattern INDEX_LINE      = Pattern.compile("^index ([0-9a-f]+)\\.\\. ?([0-9a-f]+)");
 
     record Hunk(int oldStart, int newStart, List<String> lines) {}
 
@@ -118,6 +119,35 @@ public class ExtractDiffs {
     }
 
     // ----------------------------------------------------------------
+    // git のオクタルエスケープパスをデコード
+    // 例: "web/\343\203\206\343\202\271\343\203\210.xlsx" → "web/テスト.xlsx"
+    // ----------------------------------------------------------------
+    static String decodeGitPath(String raw) {
+        if (!raw.contains("\\")) return raw;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int i = 0;
+        while (i < raw.length()) {
+            if (raw.charAt(i) == '\\'
+                    && i + 3 < raw.length()
+                    && isOctalDigit(raw.charAt(i + 1))
+                    && isOctalDigit(raw.charAt(i + 2))
+                    && isOctalDigit(raw.charAt(i + 3))) {
+                int val = (raw.charAt(i + 1) - '0') * 64
+                        + (raw.charAt(i + 2) - '0') * 8
+                        + (raw.charAt(i + 3) - '0');
+                baos.write(val);
+                i += 4;
+            } else {
+                baos.write(raw.charAt(i)); // ASCII はそのまま
+                i++;
+            }
+        }
+        return baos.toString(StandardCharsets.UTF_8);
+    }
+
+    static boolean isOctalDigit(char c) { return c >= '0' && c <= '7'; }
+
+    // ----------------------------------------------------------------
     // unified diff の解析
     // ----------------------------------------------------------------
     static List<FileInfo> parseDiff(List<String> lines) {
@@ -132,14 +162,22 @@ public class ExtractDiffs {
         while (i < lines.size()) {
             String line = lines.get(i);
 
-            // diff --git a/... b/...
-            Matcher dm = DIFF_GIT.matcher(line);
-            if (dm.matches()) {
+            // diff --git a/... b/...  または  diff --git "a/\343..." "b/\343..."
+            // git は非 ASCII ファイル名をオクタルエスケープ + クォートで出力する
+            String parsedPath = null;
+            Matcher dmq = DIFF_GIT_QUOTED.matcher(line);
+            if (dmq.matches()) {
+                parsedPath = decodeGitPath(dmq.group(2)); // オクタル → 実際のファイル名
+            } else {
+                Matcher dm = DIFF_GIT.matcher(line);
+                if (dm.matches()) parsedPath = dm.group(2);
+            }
+            if (parsedPath != null) {
                 if (currentPath != null) {
                     files.add(new FileInfo(currentPath, currentHunks,
                                            currentOldHash, currentNewHash, currentIsBinary));
                 }
-                currentPath     = dm.group(2);
+                currentPath     = parsedPath;
                 currentHunks    = new ArrayList<>();
                 currentOldHash  = null;
                 currentNewHash  = null;

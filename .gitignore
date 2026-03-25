@@ -9,7 +9,7 @@ test/patches/case09_binary_blob.patch
 
 # ツール実行時に生成されるパッチ・出力ファイル
 *.patch
-!test/patches/case0[1-8]*.patch
+!test/patches/case*.patch
 
 # Claude Code 設定 (個人環境)
 .claude/

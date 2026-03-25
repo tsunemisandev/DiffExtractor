@@ -1,4 +1,5 @@
 import java.io.*;
+import java.nio.charset.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.regex.*;
@@ -45,12 +46,19 @@ public class ExtractDiffs {
         Path   repoDir   = Path.of(args.length == 3 ? args[2] : ".").toAbsolutePath().normalize();
 
         // diff テキスト読み込み
+        // UTF-8 で読み込み、不正バイト列は置換文字 (U+FFFD) に置き換える
+        // → Shift-JIS / Latin-1 等で保存されたパッチファイルでも例外にならない
+        CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPLACE)
+                .onUnmappableCharacter(CodingErrorAction.REPLACE);
         List<String> lines;
         if ("-".equals(patchArg)) {
-            lines = new BufferedReader(new InputStreamReader(System.in, "UTF-8"))
+            lines = new BufferedReader(new InputStreamReader(System.in, decoder))
                     .lines().toList();
         } else {
-            lines = Files.readAllLines(Path.of(patchArg));
+            byte[] raw = Files.readAllBytes(Path.of(patchArg));
+            String content = decoder.decode(java.nio.ByteBuffer.wrap(raw)).toString();
+            lines = Arrays.asList(content.split("\r?\n", -1));
         }
 
         List<FileInfo> files = parseDiff(lines);
@@ -212,6 +220,7 @@ public class ExtractDiffs {
                                     List<String> after) {
         for (Hunk hunk : fi.hunks()) {
             for (String raw : hunk.lines()) {
+                if (raw.isEmpty()) continue;         // 末尾改行による空行
                 if (raw.startsWith("\\ ")) continue; // "\ No newline at end of file"
 
                 if (raw.startsWith("-")) {
